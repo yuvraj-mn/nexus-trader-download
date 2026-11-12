@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080d18">
+<title>NEXUS TRADER — Market Terminal</title>
+<style>
+:root{--bg:#080d18;--panel:#101827;--panel2:#0c1422;--line:#1e2b40;--muted:#8b9bb2;--text:#edf4ff;--cyan:#37d6e8;--green:#36d399;--red:#fb7185;--gold:#f5c66b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% -20%,#142c43 0,transparent 38%),var(--bg);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:9px;background:#162338;color:var(--text);padding:9px 12px}button:hover{border-color:var(--cyan);filter:brightness(1.12)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.top{height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--line);background:#080e19eF;position:sticky;top:0;z-index:5;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:11px;font-weight:900;letter-spacing:1.5px}.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#37d6e8,#4275ff);display:grid;place-items:center;color:#07111d;font-weight:1000;font-size:18px}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:2px;font-weight:600}
+.topright{display:flex;gap:10px;align-items:center}.status{color:var(--green);font-size:12px}.wrap{max-width:1600px;margin:auto;padding:20px}
+.notice{border:1px solid #66522a;background:#2a2112;color:#f5d99c;border-radius:10px;padding:10px 13px;font-size:12px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.stat,.panel{background:linear-gradient(145deg,#121d2e,#0d1625);border:1px solid var(--line);border-radius:14px}.stat{padding:14px 16px}.stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.stat .v{font-size:23px;font-weight:800;margin-top:4px}.up{color:var(--green)}.down{color:var(--red)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:14px}.maincol{min-width:0;display:grid;gap:14px}.panel{padding:15px}.panelhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}.panelhead h2{font-size:14px;margin:0;letter-spacing:.5px}.muted{color:var(--muted)}.symbolrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.symbol{font-size:20px;font-weight:800}.price{font-size:21px;font-weight:800}.change{font-size:12px;margin-left:8px}.tools{display:flex;gap:7px;flex-wrap:wrap}.tools button{padding:7px 10px;font-size:12px}.tools button.active{background:#123846;border-color:var(--cyan);color:#9af4ff}
+canvas{display:block;width:100%;height:320px;background:linear-gradient(180deg,#0b1524,#0b1421);border:1px solid #1a2a40;border-radius:10px;touch-action:pan-y}
+.chartfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--muted)}
+.side{display:grid;gap:14px;align-content:start}.field{display:grid;gap:6px;margin:10px 0}.field label{font-size:11px;color:var(--muted)}input,select{width:100%;background:#0a1321;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px}
+.tradebuttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.buy{background:#10372f;border-color:#1e8064;color:#8af0c6}.sell{background:#3b2029;border-color:#9a4056;color:#ffadbd}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid #1c2a3e;white-space:nowrap}th{color:var(--muted);font-weight:600}tr:last-child td{border:0}.scroll{overflow-x:auto}
+.watchrow{cursor:pointer}.watchrow:hover{background:#17263a}.tag{font-size:10px;color:var(--cyan);border:1px solid #245366;padding:3px 6px;border-radius:6px}
+.footer{text-align:center;color:#6f8098;font-size:11px;padding:22px 0 10px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#17263a;border:1px solid #3a5975;padding:10px 15px;border-radius:10px;display:none;z-index:10;box-shadow:0 10px 35px #0008}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.top{padding:0 12px;height:60px}.wrap{padding:12px}.topright .status{display:none}.brand{font-size:13px}.side{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:11px}.stat .v{font-size:19px}.panel{padding:12px}canvas{height:260px}.price{font-size:18px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo">N</div><div>NEXUS TRADER<small>MARKET INTELLIGENCE TERMINAL</small></div></div>
+  <div class="topright"><span class="status">● DEMO MODE</span><button id="exportBtn">Export CSV</button></div>
+</header>
+<div class="wrap">
+  <div class="notice">EDUCATIONAL PAPER-TRADING SIMULATOR — Prices and candles are fictional demo data, not live market quotes. No real orders or money are involved.</div>
+  <section class="stats">
+    <div class="stat"><div class="k">Virtual balance</div><div class="v" id="cashStat">₹10,00,000</div></div>
+    <div class="stat"><div class="k">Portfolio value</div><div class="v" id="portfolioStat">₹10,00,000</div></div>
+    <div class="stat"><div class="k">Total P/L</div><div class="v up" id="pnlStat">₹0</div></div>
+    <div class="stat"><div class="k">Open positions</div><div class="v" id="positionsStat">0</div></div>
+  </section>
+
+  <div class="layout">
+    <main class="maincol">
+      <section class="panel">
+        <div class="panelhead">
+          <div><div class="symbolrow"><span class="symbol" id="symbolName">NIFTY 50</span><span class="tag">DEMO</span></div><div class="muted" id="symbolDesc">Indian Index · Simulated data</div></div>
+          <div style="text-align:right"><div class="price" id="lastPrice">22,450.00</div><span class="change up" id="priceChange">+0.00%</span></div>
+        </div>
+        <div class="panelhead" style="margin-bottom:9px">
+          <div class="tools" id="timeTools"><button class="active" data-tf="1D">1D</button><button data-tf="1W">1W</button><button data-tf="1M">1M</button><button data-tf="3M">3M</button><button data-tf="1Y">1Y</button></div>
+          <div class="tools"><button id="smaBtn" class="active">SMA 20: ON</button><button id="rsiBtn">RSI: OFF</button></div>
+        </div>
+        <canvas id="chart" width="1100" height="360" aria-label="Illustrative demo candlestick chart"></canvas>
+        <div class="chartfoot"><span>● Candles <span style="color:var(--cyan)">● SMA 20</span></span><span id="chartMeta">Demo chart · Not live data</span></div>
+      </section>
+      <section class="panel">
+        <div class="panelhead"><h2>OPEN POSITIONS</h2><button id="resetBtn">Reset simulator</button></div>
+        <div class="scroll"><table><thead><tr><th>ASSET</th><th>QTY</th><th>AVG. PRICE</th><th>DEMO PRICE</th><th>UNREALIZED P/L</th></tr></thead><tbody id="positionsBody"><tr><td colspan="5" class="muted">No open positions. Use the paper trade panel to practise.</td></tr></tbody></table></div>
+      </section>
+    </main>
+    <aside class="side">
+      <section class="panel">
+        <div class="panelhead"><h2>PAPER TRADE</h2><span class="tag">VIRTUAL</span></div>
+        <div class="field"><label>SELECT ASSET</label><select id="assetSelect"><option value="NIFTY">NIFTY 50</option><option value="SENSEX">SENSEX</option><option value="RELIANCE">RELIANCE</option><option value="TCS">TCS</option><option value="INFY">INFOSYS</option><option value="AAPL">APPLE</option><option value="BTC">BITCOIN</option><option value="GOLD">GOLD</option></select></div>
+        <div class="field"><label>QUANTITY</label><input id="qtyInput" type="number" min="1" max="100000" value="1"></div>
+        <div class="field"><label>ESTIMATED ORDER VALUE</label><div class="price" id="orderValue">₹22,450.00</div></div>
+        <div class="tradebuttons"><button class="buy" id="buyBtn">BUY / LONG</button><button class="sell" id="sellBtn">SELL / CLOSE</button></div>
+        <p class="muted" style="font-size:11px;margin-bottom:0">Practice only. Orders update this browser's virtual portfolio.</p>
+      </section>
+      <section class="panel">
+        <div class="panelhead"><h2>MARKET WATCH</h2><span class="muted">DEMO</span></div>
+        <div class="scroll"><table><thead><tr><th>SYMBOL</th><th>PRICE</th><th>CHANGE</th></tr></thead><tbody id="watchBody"></tbody></table></div>
+      </section>
+      <section class="panel">
+        <div class="panelhead"><h2>TOOLS</h2></div>
+        <div class="field"><label>QUICK CALCULATOR (PRICE × QTY)</label><input id="calcPrice" type="number" placeholder="Price"></div>
+        <div class="field"><input id="calcQty" type="number" placeholder="Quantity" value="1"></div>
+        <div class="price" id="calcResult">₹0.00</div>
+      </section>
+    </aside>
+  </div>
+  <div class="footer">NEXUS TRADER WEB · Single-file responsive demo · Works offline after saving this HTML file</div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+const assets={
+ NIFTY:{name:"NIFTY 50",desc:"Indian Index",price:22450},
+ SENSEX:{name:"SENSEX",desc:"Indian Index",price:74120},
+ RELIANCE:{name:"RELIANCE",desc:"Reliance Industries",price:2860},
+ TCS:{name:"TCS",desc:"Tata Consultancy Services",price:3920},
+ INFY:{name:"INFOSYS",desc:"Infosys Limited",price:1680},
+ AAPL:{name:"APPLE",desc:"Apple Inc.",price:224},
+ BTC:{name:"BITCOIN",desc:"Crypto demo asset",price:67500},
+ GOLD:{name:"GOLD",desc:"Commodity demo asset",price:2380}
+};
+let selected="NIFTY", timeframe="1D", showSMA=true, showRSI=false;
+let cash=1000000, positions={}, series={}, currentPrices={};
+const fmt=n=>"₹"+Number(n).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+function seed(key){let s=0;for(const c of key)s=(s*31+c.charCodeAt(0))>>>0;return ()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+function makeSeries(key){const rand=seed(key+timeframe);let p=assets[key].price*(.94+rand()*.12),a=[];let count=72;for(let i=0;i<count;i++){let o=p,move=(rand()-.48)*.018;p=Math.max(1,p*(1+move));let c=p,h=Math.max(o,c)*(1+rand()*.008),l=Math.min(o,c)*(1-rand()*.008);a.push({o,h,l,c});}return a;}
+function getSeries(k){if(!series[k+"_"+timeframe])series[k+"_"+timeframe]=makeSeries(k);return series[k+"_"+timeframe];}
+function price(k){return currentPrices[k]??getSeries(k).at(-1).c;}
+function showToast(msg){$("toast").textContent=msg;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",2300);}
+function selectAsset(k){selected=k;$("assetSelect").value=k;render();}
+function draw(){const canvas=$("chart"),ctx=canvas.getContext("2d"),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);const a=getSeries(selected),pad={l:12,r:66,t:15,b:22};let vals=a.flatMap(x=>[x.h,x.l]);let min=Math.min(...vals),max=Math.max(...vals),range=max-min||1;const y=v=>pad.t+(max-v)/range*(h-pad.t-pad.b),step=(w-pad.l-pad.r)/a.length,cw=Math.max(3,step*.56);
+ctx.font="11px system-ui";ctx.strokeStyle="#1b2b40";ctx.fillStyle="#8192aa";ctx.lineWidth=1;
+for(let i=0;i<5;i++){let yy=pad.t+i*(h-pad.t-pad.b)/4;ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();let val=max-i*range/4;ctx.fillText(val.toFixed(0),w-pad.r+7,yy+4);}
+a.forEach((d,i)=>{let x=pad.l+i*step+step/2,up=d.c>=d.o;ctx.strokeStyle=up?"#36d399":"#fb7185";ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,y(d.h));ctx.lineTo(x,y(d.l));ctx.stroke();let top=y(Math.max(d.o,d.c)),bh=Math.max(2,Math.abs(y(d.o)-y(d.c)));ctx.fillRect(x-cw/2,top,cw,bh);});
+if(showSMA){ctx.strokeStyle="#37d6e8";ctx.lineWidth=2;ctx.beginPath();let started=false;for(let i=19;i<a.length;i++){let avg=a.slice(i-19,i+1).reduce((s,d)=>s+d.c,0)/20;let x=pad.l+i*step+step/2;if(!started){ctx.moveTo(x,y(avg));started=true}else ctx.lineTo(x,y(avg));}ctx.stroke();}
+if(showRSI){let base=h-17;ctx.strokeStyle="#f5c66b";ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad.l,base-35);ctx.lineTo(w-pad.r,base-35);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#f5c66b";ctx.fillText("RSI display is illustrative",pad.l+5,base-40);}
+}
+function render(){const a=assets[selected],s=getSeries(selected),last=price(selected),first=s[0].c,change=(last-first)/first*100;
+$("symbolName").textContent=a.name;$("symbolDesc").textContent=a.desc+" · Simulated data";$("lastPrice").textContent=last.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});$("priceChange").textContent=(change>=0?"+":"")+change.toFixed(2)+"%";$("priceChange").className="change "+(change>=0?"up":"down");$("orderValue").textContent=fmt(last*Math.max(0,Number($("qtyInput").value)||0));
+draw();renderWatch();renderPortfolio();}
+function renderWatch(){$("watchBody").innerHTML=Object.keys(assets).map(k=>{let s=getSeries(k),p=price(k),ch=(p-s[0].c)/s[0].c*100;return `<tr class="watchrow" data-k="${k}"><td>${k}</td><td>${p.toLocaleString("en-IN",{maximumFractionDigits:2})}</td><td class="${ch>=0?"up":"down"}">${ch>=0?"+":""}${ch.toFixed(2)}%</td></tr>`}).join("");document.querySelectorAll(".watchrow").forEach(r=>r.addEventListener("click",()=>selectAsset(r.dataset.k)));}
+function renderPortfolio(){let value=cash,pl=0,count=0,rows=[];for(const [k,pos] of Object.entries(positions)){if(pos.qty<=0)continue;count++;let p=price(k),v=p*pos.qty,profit=(p-pos.avg)*pos.qty;value+=v;pl+=profit;rows.push(`<tr><td>${k}</td><td>${pos.qty}</td><td>${fmt(pos.avg)}</td><td>${fmt(p)}</td><td class="${profit>=0?"up":"down"}">${fmt(profit)}</td></tr>`);}
+$("cashStat").textContent=fmt(cash);$("portfolioStat").textContent=fmt(value);$("pnlStat").textContent=fmt(pl);$("pnlStat").className="v "+(pl>=0?"up":"down");$("positionsStat").textContent=count;$("positionsBody").innerHTML=rows.join("")||'<tr><td colspan="5" class="muted">No open positions. Use the paper trade panel to practise.</td></tr>';}
+function trade(side){let qty=Math.floor(Number($("qtyInput").value)),p=price(selected);if(!Number.isFinite(qty)||qty<1){showToast("Enter a quantity of at least 1.");return;}let pos=positions[selected]||{qty:0,avg:0};if(side==="buy"){let cost=p*qty;if(cost>cash){showToast("Not enough virtual balance.");return;}pos.avg=(pos.avg*pos.qty+cost)/(pos.qty+qty);pos.qty+=qty;cash-=cost;showToast("Demo buy completed.");}else{if(qty>pos.qty){showToast("You do not have enough units to close.");return;}cash+=p*qty;pos.qty-=qty;if(pos.qty===0)pos.avg=0;showToast("Demo sell completed.");}positions[selected]=pos;renderPortfolio();}
+$("assetSelect").addEventListener("change",e=>selectAsset(e.target.value));$("qtyInput").addEventListener("input",()=>{$("orderValue").textContent=fmt(price(selected)*(Number($("qtyInput").value)||0));});$("buyBtn").addEventListener("click",()=>trade("buy"));$("sellBtn").addEventListener("click",()=>trade("sell"));
+$("timeTools").addEventListener("click",e=>{let b=e.target.closest("button[data-tf]");if(!b)return;timeframe=b.dataset.tf;series={};document.querySelectorAll("#timeTools button").forEach(x=>x.classList.toggle("active",x===b));render();});
+$("smaBtn").addEventListener("click",()=>{showSMA=!showSMA;$("smaBtn").textContent="SMA 20: "+(showSMA?"ON":"OFF");$("smaBtn").classList.toggle("active",showSMA);draw();});
+$("rsiBtn").addEventListener("click",()=>{showRSI=!showRSI;$("rsiBtn").textContent="RSI: "+(showRSI?"ON":"OFF");$("rsiBtn").classList.toggle("active",showRSI);draw();});
+$("calcPrice").addEventListener("input",calc);$("calcQty").addEventListener("input",calc);function calc(){$("calcResult").textContent=fmt((Number($("calcPrice").value)||0)*(Number($("calcQty").value)||0));}
+$("resetBtn").addEventListener("click",()=>{if(!confirm("Reset virtual balance and all demo positions?"))return;cash=1000000;positions={};renderPortfolio();showToast("Simulator reset.");});
+$("exportBtn").addEventListener("click",()=>{let lines=["Symbol,Quantity,Average Price,Demo Price,Unrealized P/L"];for(const [k,p] of Object.entries(positions))if(p.qty)lines.push([k,p.qty,p.avg,price(k),(price(k)-p.avg)*p.qty].join(","));let blob=new Blob([lines.join("\n")],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="nexus-trader-paper-portfolio.csv";a.click();URL.revokeObjectURL(url);});
+render();
+})();
+</script>
+</body>
+</html>
